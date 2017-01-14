@@ -134,14 +134,12 @@ public class SplashScreen extends JFrame {
 				// save current user data
 				// if name is already stored at database, so we doesn't need to insert it
 				// return userid and pass to next frame
-				int UserID = 0;
 				String TopicName = "";
 				String sql = "select * from User where Username = '" + txtSplashName.getText().trim() + "'";
 				try {
 					ResultSet rsInsert = st.executeQuery(sql);
 					if (rsInsert.isBeforeFirst()){
 						rsInsert.next();
-						UserID = rsInsert.getInt("userid");
 					}else{
 						sql = "select * from User";
 						Statement st2 = DBContext.getConnection().createStatement(1004, 1008);
@@ -154,14 +152,13 @@ public class SplashScreen extends JFrame {
 						}
 						sql = "insert into User values (" + lastID + ", '" + txtSplashName.getText().trim() + "')";
 						st2.executeUpdate(sql);
-						UserID = lastID;
 					}
 				} catch (SQLException ex) {
 					// TODO Auto-generated catch block
 					JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 				}
 				
-				Hangman app = new Hangman();
+				Hangman app = new Hangman(txtSplashName.getText().trim(), cbSplashTopic.getSelectedItem().toString());
 				app.setVisible(true);
 				
 				setVisible(false);
