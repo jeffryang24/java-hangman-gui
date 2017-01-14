@@ -18,7 +18,7 @@ public class DBConfig {
 	public static final String DB_DRIVER = "sun.jdbc.odbc.JdbcOdbcDriver";
 	
 	// Access Database File
-	public static final String DB_FILE = "C:\\Users\\Jeffry Angtoni\\workspace\\java-hangman-gui\\gamedb.mdb";
+	public static final String DB_FILE = "C:\\Users\\Jeffry Angtoni\\workspace \\java-hangman-gui\\gamedb.mdb";
 	
 	// Access Connection String
 	// ATTENTION!!
