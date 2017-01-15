@@ -25,12 +25,19 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Vector;
 import java.awt.Component;
 import java.awt.Dimension;
 import javax.swing.JTextField;
 import java.awt.GridLayout;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class Hangman extends JFrame implements KeyListener {
 
@@ -40,12 +47,18 @@ public class Hangman extends JFrame implements KeyListener {
 	private Statement st = DBContext.getStatement();
 	private Vector<JTextField> listTextField = new Vector<JTextField>();
 	private ArrayList<String> listKata = new ArrayList<String>();
+	private ArrayList<String> listHurufPressed = new ArrayList<String>();
 	private ArrayList<Integer> letakHuruf = new ArrayList<Integer>();
 	private int totalWord = 0, totalAnswered = 0, totalTry = 0, allowedTry = 5;
 	private String curWord = "";
 	
+	public static String UserName,TopicName;
+	
 	// Public scope component
 	private JLabel lblTryInfo = new JLabel("%TRY%");
+	private JPanel pnlMiddle = new JPanel();
+	private static JTextField txtUserInput;
+	private JLabel lblScoreText = new JLabel("%answered%/%total%");
 
 	/**
 	 * Launch the application.
@@ -62,11 +75,34 @@ public class Hangman extends JFrame implements KeyListener {
 			}
 		});
 	}
+	
+	/*
+	 * @desc: call this function from another class,
+	 * 		  don't use default constructor
+	 */
+	public static void OpenMe(){
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					Hangman frame = new Hangman(UserName, TopicName);
+					frame.setVisible(true);
+				} catch (Exception e) {
+					JOptionPane.showMessageDialog(null, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		});
+	}
 
 	/**
 	 * Create the frame.
 	 */
 	public Hangman() {
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowOpened(WindowEvent e) {
+				txtUserInput.requestFocus();
+			}
+		});
 		setResizable(false);
 		setTitle("Hangman");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -143,6 +179,14 @@ public class Hangman extends JFrame implements KeyListener {
 		JLabel lblTryInfo = new JLabel("%TRY%");
 		lblTryInfo.setFont(new Font("Tahoma", Font.BOLD, 19));
 		pnlBottom.add(lblTryInfo);
+		
+		JPanel pnlRight = new JPanel();
+		contentPane.add(pnlRight, BorderLayout.EAST);
+		
+		txtUserInput = new JTextField();
+		txtUserInput.setFont(new Font("Tahoma", Font.BOLD, 15));
+		pnlRight.add(txtUserInput);
+		txtUserInput.setColumns(10);
 	}
 	
 	/*
@@ -186,7 +230,6 @@ public class Hangman extends JFrame implements KeyListener {
 		lblScore.setFont(new Font("Tahoma", Font.PLAIN, 15));
 		pnlUpper.add(lblScore);
 		
-		JLabel lblScoreText = new JLabel("%answered%/%total%");
 		lblScoreText.setFont(new Font("Tahoma", Font.BOLD, 15));
 		// Set Initial Score
 		lblScoreText.setText(String.valueOf(totalAnswered) + "/" + String.valueOf(totalWord));
@@ -218,7 +261,6 @@ public class Hangman extends JFrame implements KeyListener {
 		lblTopicText.setText(TopicName);
 		pnlUpper.add(lblTopicText);
 		
-		JPanel pnlMiddle = new JPanel();
 		contentPane.add(pnlMiddle, BorderLayout.CENTER);
 		pnlMiddle.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
 		// add first occurence word
@@ -230,6 +272,7 @@ public class Hangman extends JFrame implements KeyListener {
 			JTextField txtTemp = new JTextField(10);
 			txtTemp.setFont(new Font("Tahoma", Font.BOLD, 20));
 			txtTemp.setHorizontalAlignment(JTextField.CENTER);
+			txtTemp.setEditable(false);
 			txtTemp.addKeyListener(this);
 			listTextField.addElement(txtTemp);
 			pnlMiddle.add(listTextField.get(i));
@@ -263,6 +306,38 @@ public class Hangman extends JFrame implements KeyListener {
 		lblTryInfo.setFont(new Font("Tahoma", Font.BOLD, 19));
 		lblTryInfo.setText(String.valueOf(totalTry) + "/" + String.valueOf(allowedTry));
 		pnlBottom.add(lblTryInfo);
+		
+		JButton btnBackToMenu = new JButton("Back to Menu");
+		btnBackToMenu.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int UserReply = JOptionPane.showConfirmDialog(null, "Are you sure want to back to main menu? Current condition will not be saved to database!", "Are you sure?", JOptionPane.YES_NO_OPTION);
+				if (UserReply == JOptionPane.YES_OPTION){
+					SplashScreen app = new SplashScreen();
+					app.main(null);
+					setVisible(false);
+				}
+			}
+		});
+		btnBackToMenu.setFont(new Font("Tahoma", Font.PLAIN, 13));
+		pnlBottom.add(btnBackToMenu);
+		
+		JPanel pnlRight = new JPanel();
+		contentPane.add(pnlRight, BorderLayout.EAST);
+		
+		txtUserInput = new JTextField();
+		txtUserInput.setFont(new Font("Tahoma", Font.BOLD, 15));
+		txtUserInput.addKeyListener(this);
+		pnlRight.add(txtUserInput);
+		txtUserInput.setColumns(10);
+		
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowOpened(WindowEvent e) {
+				txtUserInput.requestFocus();
+			}
+		});
+		
+		setLocationRelativeTo(null);
 	}
 
 	@Override
@@ -274,66 +349,154 @@ public class Hangman extends JFrame implements KeyListener {
 	@Override
 	public void keyPressed(KeyEvent e) {
 		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
+		e.consume();
 		Object source = e.getSource();
 		
 		// get input key
 		String keyPressed = e.getKeyText(e.getKeyCode());
 		
 		// Ignore F1-F12 key
-		if (keyPressed.length() > 1) return;
-		
-		// find occurence word
-		if (curWord.toLowerCase().contains(keyPressed.toLowerCase())){
-			for(int i=0;i<curWord.length();i++){
-				if (keyPressed.equalsIgnoreCase(String.valueOf(curWord.charAt(i)))){
-					letakHuruf.add(i);
-				}else{
-					// clear the textbox
-					for(int j=0;j<listTextField.size();j++){
-						if (source == listTextField.get(j)){
-							JTextField tmp = listTextField.get(j);
-							tmp.setText("");
-							listTextField.set(j, tmp);
-							
-							// use try
-							totalTry++;
-							lblTryInfo.setText(String.valueOf(totalTry) + "/" + String.valueOf(allowedTry));
-						}
+		if (source == txtUserInput){
+			JTextField t = (JTextField)source;
+			t.setText("");
+			//JOptionPane.showMessageDialog(null, keyPressed);
+			if (keyPressed.length() > 1){
+				t.setText("");
+				return;
+			}
+			
+			// check user inputted character
+			
+			// check user's character is exist or not?
+			if (listHurufPressed.contains(keyPressed.toLowerCase())) return;
+			
+			if (curWord.toLowerCase().contains(keyPressed.toLowerCase())){
+				listHurufPressed.add(keyPressed.toLowerCase());
+				for(int i=0;i<curWord.length();i++){
+					if (keyPressed.equalsIgnoreCase(String.valueOf(curWord.charAt(i)))){
+						letakHuruf.add(i);
 					}
 				}
+			}else{
+				t.setText("");
+				
+				totalTry++;
+				lblTryInfo.setText(String.valueOf(totalTry) + "/" + String.valueOf(allowedTry));
+			}		
+			
+			// check if total try is bigger than allowed try,
+			// if true, then game over
+			if (totalTry > allowedTry){
+				// save to database, current user data
+				Date dt = new Date();
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				sql = "insert into Score (userid, topicid, totalanswered, datetested) " + 
+						"select a.userid, b.topicid, " + totalAnswered + ",'" + sdf.format(dt) + "' " + 
+						"from User a, TopicHeader b where a.username='" + UserName + "' and b.topicdesc='" + TopicName + "'";
+				try {
+					st.executeUpdate(sql);
+				} catch (SQLException ex) {
+					// TODO Auto-generated catch block
+					JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				}
+				
+				JOptionPane.showMessageDialog(null, "Game Over! Thanks for playing!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+				
+				SplashScreen app = new SplashScreen();
+				app.main(null);
+				
+				setVisible(false);
 			}
-		}
-		
-		
-		// check if total try is bigger than allowed try,
-		// if true, then game over
-		if (totalTry > allowedTry){
-			JOptionPane.showMessageDialog(null, "Game Over! Thanks for playing!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
-			System.exit(0);
-		}
-		
-		// cek kalau jawaban sudah benar semua
-		if (listTextField.size() == 0){
-			totalAnswered += 1;
-			return;
-		}
-		
-		for(int k=0;k<listTextField.size();k++){
-			if (source == listTextField.get(k)){
-				for(int j=0;j<letakHuruf.size();j++){
+			
+			int total_unsolved = 0;
+			for(int i=0;i<listTextField.size();i++){
+				JTextField t1 = listTextField.get(i);
+				if (t1.isEnabled()) total_unsolved++;
+			}
+			
+			// total_unsolved minus 1 for fixing realtime issue
+			if (total_unsolved > 0){
+				for (int j=0;j<letakHuruf.size();j++){
 					JTextField tmp = listTextField.get(letakHuruf.get(j));
 					tmp.setText(String.valueOf(curWord.charAt(letakHuruf.get(j))));
 					tmp.setEnabled(false);
 					listTextField.set(letakHuruf.get(j), tmp);
 				}
 			}
+			
+			total_unsolved = 0;
+			for(int i=0;i<listTextField.size();i++){
+				JTextField t1 = listTextField.get(i);
+				if (t1.isEnabled()) total_unsolved++;
+			}
+			
+			if (total_unsolved == 0){
+				totalAnswered += 1;
+				
+				// print score
+				lblScoreText.setText(String.valueOf(totalAnswered) + "/" + String.valueOf(totalWord));
+				
+				// reset try
+				totalTry = 0;
+				
+				// print try info
+				lblTryInfo.setText(String.valueOf(totalTry) + "/" + String.valueOf(allowedTry));
+				
+				// check if user has finished all the test
+				if (totalAnswered == totalWord){
+					// save to database, current user data
+					Date dt = new Date();
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					sql = "insert into Score (userid, topicid, totalanswered, datetested) " + 
+							"select a.userid, b.topicid, " + totalAnswered + ",'" + sdf.format(dt) + "' " + 
+							"from User a, TopicHeader b where a.username='" + UserName + "' and b.topicdesc='" + TopicName + "'";
+					try {
+						st.executeUpdate(sql);
+					} catch (SQLException ex) {
+						// TODO Auto-generated catch block
+						JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+					}
+					
+					// set congratulations
+					JOptionPane.showMessageDialog(null, "Congratulations! You have been successfully completed all of the topic words! Well Done!", "Game Over", JOptionPane.INFORMATION_MESSAGE);
+					
+					SplashScreen app = new SplashScreen();
+					app.main(null);
+					
+					System.exit(0);
+				}
+				
+				// remove current word from listKata
+				listKata.remove(curWord);
+				
+				curWord = listKata.get(RNG.randomNumber(0, listKata.size() - 1));
+				letakHuruf.clear();
+				listHurufPressed.clear();
+				listTextField.clear();
+				
+				pnlMiddle.removeAll();
+				pnlMiddle.revalidate();
+				pnlMiddle.repaint();
+				
+				for(int i=0;i<curWord.length();i++){
+					JTextField txtTemp = new JTextField(10);
+					txtTemp.setFont(new Font("Tahoma", Font.BOLD, 20));
+					txtTemp.setHorizontalAlignment(JTextField.CENTER);
+					txtTemp.setEditable(false);
+					txtTemp.addKeyListener(this);
+					listTextField.addElement(txtTemp);
+					pnlMiddle.add(listTextField.get(i));
+				}
+				
+				return;
+			}
 		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

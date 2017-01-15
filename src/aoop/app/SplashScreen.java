@@ -158,9 +158,10 @@ public class SplashScreen extends JFrame {
 					JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 				}
 				
-				Hangman app = new Hangman(txtSplashName.getText().trim(), cbSplashTopic.getSelectedItem().toString());
-				app.setVisible(true);
-				
+				Hangman.UserName = txtSplashName.getText().trim();
+				Hangman.TopicName = cbSplashTopic.getSelectedItem().toString();
+				Hangman.OpenMe();
+
 				setVisible(false);
 			}
 		});
@@ -173,12 +174,18 @@ public class SplashScreen extends JFrame {
 		lblNewLine2.setBorder(new EmptyBorder(15, 0, 0, 0));
 		panel.add(lblNewLine2);
 		
-		JButton btnAddTopic = new JButton("Create New Topic");
-		btnAddTopic.setMnemonic(KeyEvent.VK_N);
-		btnAddTopic.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		btnAddTopic.setBackground(Color.GREEN);
-		btnAddTopic.setAlignmentX(Component.CENTER_ALIGNMENT);
-		panel.add(btnAddTopic);
+		JButton btnShowScore = new JButton("Score List");
+		btnShowScore.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ScoreList app = new ScoreList();
+				setVisible(false);
+			}
+		});
+		btnShowScore.setMnemonic(KeyEvent.VK_N);
+		btnShowScore.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		btnShowScore.setBackground(Color.GREEN);
+		btnShowScore.setAlignmentX(Component.CENTER_ALIGNMENT);
+		panel.add(btnShowScore);
 		
 		JPanel panel_1 = new JPanel();
 		contentPane.add(panel_1, BorderLayout.SOUTH);
@@ -219,8 +226,7 @@ public class SplashScreen extends JFrame {
 			JOptionPane.showMessageDialog(null, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
 		
-		// Finally Show it!!!
-		setVisible(true);
+		setLocationRelativeTo(null);
 	}
 
 }
