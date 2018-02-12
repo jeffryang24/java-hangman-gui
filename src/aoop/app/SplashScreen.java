@@ -27,6 +27,8 @@ import java.awt.event.KeyEvent;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class SplashScreen extends JFrame {
 
@@ -104,14 +106,65 @@ public class SplashScreen extends JFrame {
 		lblSplashTopic.setAlignmentX(0.5f);
 		panel.add(lblSplashTopic);
 		
-		JComboBox cbSplashTopic = new JComboBox();
+		final JComboBox cbSplashTopic = new JComboBox();
 		panel.add(cbSplashTopic);
 		
 		JLabel lblNewLine = new JLabel("");
 		lblNewLine.setBorder(new EmptyBorder(10, 0, 0, 0));
 		panel.add(lblNewLine);
 		
-		JButton btnSplashEnter = new JButton("Enter");
+		final JButton btnSplashEnter = new JButton("Enter");
+		btnSplashEnter.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// validate name
+				if (txtSplashName.getText().trim().equals("")){
+					JOptionPane.showMessageDialog(null, "Please insert your name!", "Error", JOptionPane.WARNING_MESSAGE);
+					return;
+				}else if (txtSplashName.getText().trim().length() < 3){
+					JOptionPane.showMessageDialog(null, "Min. 3 characters for name!", "Error", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+				
+				// validate topic
+				if (cbSplashTopic.getSelectedIndex() == 0 || cbSplashTopic.getSelectedIndex() == -1){
+					JOptionPane.showMessageDialog(null, "Please choose your topic!", "Error", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+				
+				// save current user data
+				// if name is already stored at database, so we doesn't need to insert it
+				// return userid and pass to next frame
+				String TopicName = "";
+				String sql = "select * from User where Username = '" + txtSplashName.getText().trim() + "'";
+				try {
+					ResultSet rsInsert = st.executeQuery(sql);
+					if (rsInsert.isBeforeFirst()){
+						rsInsert.next();
+					}else{
+						sql = "select * from User";
+						Statement st2 = DBContext.getConnection().createStatement(1004, 1008);
+						ResultSet rsInsert2 = st2.executeQuery(sql);
+						int lastID = 0;
+						if (!rsInsert2.next()) lastID += 1;
+						else{
+							rsInsert2.last();
+							lastID = rsInsert2.getInt("userid") + 1;
+						}
+						sql = "insert into User values (" + lastID + ", '" + txtSplashName.getText().trim() + "')";
+						st2.executeUpdate(sql);
+					}
+				} catch (SQLException ex) {
+					// TODO Auto-generated catch block
+					JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				}
+				
+				Hangman.UserName = txtSplashName.getText().trim();
+				Hangman.TopicName = cbSplashTopic.getSelectedItem().toString();
+				Hangman.OpenMe();
+
+				setVisible(false);
+			}
+		});
 		btnSplashEnter.setMnemonic(KeyEvent.VK_E);
 		btnSplashEnter.setFont(new Font("Tahoma", Font.BOLD, 15));
 		btnSplashEnter.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -121,12 +174,18 @@ public class SplashScreen extends JFrame {
 		lblNewLine2.setBorder(new EmptyBorder(15, 0, 0, 0));
 		panel.add(lblNewLine2);
 		
-		JButton btnAddTopic = new JButton("Create New Topic");
-		btnAddTopic.setMnemonic(KeyEvent.VK_N);
-		btnAddTopic.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		btnAddTopic.setBackground(Color.GREEN);
-		btnAddTopic.setAlignmentX(Component.CENTER_ALIGNMENT);
-		panel.add(btnAddTopic);
+		JButton btnShowScore = new JButton("Score List");
+		btnShowScore.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ScoreList app = new ScoreList();
+				setVisible(false);
+			}
+		});
+		btnShowScore.setMnemonic(KeyEvent.VK_N);
+		btnShowScore.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		btnShowScore.setBackground(Color.GREEN);
+		btnShowScore.setAlignmentX(Component.CENTER_ALIGNMENT);
+		panel.add(btnShowScore);
 		
 		JPanel panel_1 = new JPanel();
 		contentPane.add(panel_1, BorderLayout.SOUTH);
@@ -167,8 +226,8 @@ public class SplashScreen extends JFrame {
 			JOptionPane.showMessageDialog(null, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
 		
-		// Finally Show it!!!
-		setVisible(true);
+		setLocationRelativeTo(null);
 	}
 
 }
+>>>>>>> ca5ef1b6b0d8a4e153cf2c8c7c5ad981c913befa
